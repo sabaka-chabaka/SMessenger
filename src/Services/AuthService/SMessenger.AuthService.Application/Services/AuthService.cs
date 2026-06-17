@@ -1,3 +1,5 @@
+using System.Security.Authentication;
+using Microsoft.Extensions.Configuration;
 using SMessenger.AuthService.Application.DTOs.Exceptions;
 using SMessenger.AuthService.Application.DTOs.Requests;
 using SMessenger.AuthService.Application.DTOs.Responses;
@@ -11,12 +13,13 @@ public class AuthService(
     IUserRepository userRepository,
     IRefreshTokenRepository refreshTokenRepository,
     ITokenService tokenService,
-    IPasswordHasher passwordHasher
+    IPasswordHasher passwordHasher, IConfiguration config
 ) : IAuthService
 {
     public async Task<AuthResult> RegisterAsync(RegisterRequest request, CancellationToken ct = default)
     {
         if (await userRepository.ExistsAsync(request.Email, ct)) throw new UserAlreadyExistsException(request.Email);
+        if (request.Key != config["SecretSettings:Secret"]) throw new InvalidCredentialsException();
         
         var user = User.Create(request.Email, passwordHasher.Hash(request.Password));
         
