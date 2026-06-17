@@ -3,6 +3,13 @@
   <Folder Name="/src/Gateway/">
     <Project Path="src/Gateway/SMessenger.Gateway/SMessenger.Gateway.csproj" />
   </Folder>
+  <Folder Name="/src/Services/" />
+  <Folder Name="/src/Services/AuthService/">
+    <Project Path="src/Services/AuthService/SMessenger.AuthService.API/SMessenger.AuthService.API.csproj" />
+    <Project Path="src/Services/AuthService/SMessenger.AuthService.Application/SMessenger.AuthService.Application.csproj" />
+    <Project Path="src/Services/AuthService/SMessenger.AuthService.Domain/SMessenger.AuthService.Domain.csproj" />
+    <Project Path="src/Services/AuthService/SMessenger.AuthService.Infrastructure/SMessenger.AuthService.Infrastructure.csproj" />
+  </Folder>
   <Folder Name="/src/Shared/">
     <Project Path="src/Shared/SMessenger.Shared.Contracts/SMessenger.Shared.Contracts.csproj" />
   </Folder>
