@@ -1,6 +1,6 @@
 using SMessenger.AuthService.Application.Interfaces;
 
-namespace SMessenger.AuthService.Infrastructure;
+namespace SMessenger.AuthService.Infrastructure.Security;
 
 public class BCryptPasswordHasher : IPasswordHasher
 {
