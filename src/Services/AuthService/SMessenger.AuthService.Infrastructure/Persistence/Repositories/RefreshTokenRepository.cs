@@ -13,7 +13,7 @@ public class RefreshTokenRepository(AppDbContext db) : IRefreshTokenRepository
 
     public async Task<IReadOnlyList<RefreshToken>> GetActiveByUserIdAsync(Guid userId, CancellationToken ct = default)
     {
-        return await db.RefreshTokens.Where(x => x.UserId == userId && !x.IsRevoked).ToListAsync(ct);
+        return await db.RefreshTokens.Where(x => x.UserId == userId && !x.IsRevoked && x.ExpiresAt > DateTime.UtcNow).ToListAsync(ct);
     }
 
     public async Task CreateAsync(RefreshToken refreshToken, CancellationToken ct = default)
