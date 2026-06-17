@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
+using SMessenger.AuthService.Application.DTOs.Responses;
 using SMessenger.AuthService.Application.Interfaces;
 using SMessenger.AuthService.Domain.Entities;
 using SMessenger.AuthService.Infrastructure.Settings;
@@ -38,10 +39,10 @@ public class JwtTokenService(JwtSettings settings) : ITokenService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    public string GenerateRefreshToken()
+    public RefreshTokenData GenerateRefreshToken()
     {
         var bytes = RandomNumberGenerator.GetBytes(64);
-        return Convert.ToBase64String(bytes);
+        return new RefreshTokenData(Convert.ToBase64String(bytes), DateTime.UtcNow.AddMinutes(settings.AccessTokenExpireMin));
     }
 
     public ClaimsPrincipal? ValidateAccessToken(string token)
