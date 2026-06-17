@@ -28,7 +28,7 @@ Write-Host "Adding projects to Solution..." -ForegroundColor Cyan
 dotnet sln add $ApiProj $AppProj $DomProj $InfProj
 
 Write-Host "Clear projects..." -ForegroundColor Cyan
-rm "$ServicePath/SMessenger.$ServiceName.API/$ServiceName.http" -Force
+rm "$ServicePath/SMessenger.$ServiceName.API/SMessenger.$ServiceName.API.http" -Force
 rm "$ServicePath/SMessenger.$ServiceName.Application/Class1.cs" -Force
 rm "$ServicePath/SMessenger.$ServiceName.Domain/Class1.cs" -Force
 rm "$ServicePath/SMessenger.$ServiceName.Infrastructure/Class1.cs" -Force
