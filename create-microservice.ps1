@@ -27,4 +27,20 @@ dotnet add $ApiProj reference $InfProj
 Write-Host "Adding projects to Solution..." -ForegroundColor Cyan
 dotnet sln add $ApiProj $AppProj $DomProj $InfProj
 
+Write-Host "Clear projects..." -ForegroundColor Cyan
+rm "$ServicePath/SMessenger.$ServiceName.API/$ServiceName.http" -Force
+rm "$ServicePath/SMessenger.$ServiceName.Application/Class1.cs" -Force
+rm "$ServicePath/SMessenger.$ServiceName.Domain/Class1.cs" -Force
+rm "$ServicePath/SMessenger.$ServiceName.Infrastructure/Class1.cs" -Force
+Set-Content -Path "$ServicePath/SMessenger.$ServiceName.API/Program.cs" -Value @'
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddOpenApi();
+
+var app = builder.Build();
+
+app.Run();
+'@
+
+
 Write-Host "Service $ServiceName successfully created!" -ForegroundColor Green
