@@ -42,5 +42,32 @@ var app = builder.Build();
 app.Run();
 '@
 
+Write-Host "Generating Alpine Dockerfile inside service folder..." -ForegroundColor Cyan
+$DockerfilePath = "$ServicePath/Dockerfile" 
+$DockerfileContent = @"
+FROM ://microsoft.com AS build
+WORKDIR /app
+
+COPY ["src/Services/$ServiceName/SMessenger.$ServiceName.API/SMessenger.$ServiceName.API.csproj", "src/Services/$ServiceName/SMessenger.$ServiceName.API/"]
+COPY ["src/Services/$ServiceName/SMessenger.$ServiceName.Application/SMessenger.$ServiceName.Application.csproj", "src/Services/$ServiceName/SMessenger.$ServiceName.Application/"]
+COPY ["src/Services/$ServiceName/SMessenger.$ServiceName.Domain/SMessenger.$ServiceName.Domain.csproj", "src/Services/$ServiceName/SMessenger.$ServiceName.Domain/"]
+COPY ["src/Services/$ServiceName/SMessenger.$ServiceName.Infrastructure/SMessenger.$ServiceName.Infrastructure.csproj", "src/Services/$ServiceName/SMessenger.$ServiceName.Infrastructure/"]
+
+RUN dotnet restore src/Services/$ServiceName/SMessenger.$ServiceName.API/SMessenger.$ServiceName.API.csproj
+
+COPY . .
+WORKDIR /app/src/Services/$ServiceName/SMessenger.$ServiceName.API
+
+RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
+
+FROM ://microsoft.com AS runtime
+WORKDIR /app
+EXPOSE 8080
+COPY --from=build /app/publish .
+ENTRYPOINT ["dotnet", "SMessenger.$ServiceName.API.dll"]
+"@
+
+Set-Content -Path $DockerfilePath -Value $DockerfileContent
+
 
 Write-Host "Service $ServiceName successfully created!" -ForegroundColor Green
