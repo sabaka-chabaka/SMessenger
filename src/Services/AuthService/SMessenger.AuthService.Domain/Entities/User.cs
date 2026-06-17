@@ -6,6 +6,7 @@ public class User
     public string Email { get; private set; }
     public string PasswordHash { get; private set; }
     public string Role { get; private set; }
+    public string? Username { get; private set; }
     public bool IsActive { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
@@ -40,4 +41,6 @@ public class User
         Email = newEmail.ToLowerInvariant();
         UpdatedAt = DateTime.UtcNow;
     }
+    
+    public void ChangeUsername(string newUsername) => Username = newUsername;
 }
