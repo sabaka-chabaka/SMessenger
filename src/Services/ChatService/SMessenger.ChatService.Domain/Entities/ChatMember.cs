@@ -10,6 +10,8 @@ public class ChatMember
     public DateTime JoinedAt { get; private set; }
     public DateTime? LastReadAt { get; private set; }
 
+    public Chat Chat { get; private set; } = null!;
+
     private ChatMember() { }
 
     public static ChatMember Create(Guid chatId, Guid userId, MemberRole role)

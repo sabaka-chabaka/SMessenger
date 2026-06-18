@@ -12,6 +12,8 @@ public class Message
     public DateTime CreatedAt { get; private set; }
     public DateTime? EditedAt { get; private set; }
 
+    public Chat Chat { get; private set; } = null!;
+
     private Message() { }
 
     public static Message Create(Guid chatId, Guid senderId, string ciphertextBase64, string nonce)

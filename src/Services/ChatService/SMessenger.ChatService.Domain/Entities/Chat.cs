@@ -9,6 +9,10 @@ public class Chat
     public string Name { get; private set; } = null!;
     public DateTime CreatedAt { get; private set; }
 
+    public ICollection<Message> Messages { get; private set; } = new List<Message>();
+    public ICollection<ChatMember> Members { get; private set; } = new List<ChatMember>();
+    public ICollection<ChatEncryptedKey> EncryptedKeys { get; private set; } = new List<ChatEncryptedKey>();
+
     private Chat() { }
 
     public static Chat Create(ChatType type, string name = "")

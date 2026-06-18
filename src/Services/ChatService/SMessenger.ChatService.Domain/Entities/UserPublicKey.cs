@@ -7,4 +7,6 @@ public class UserPublicKey
     public string Algorithm { get; set; } = null!;
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+
+    public ICollection<ChatEncryptedKey> EncryptedKeys { get; private set; } = new List<ChatEncryptedKey>();
 }

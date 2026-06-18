@@ -18,9 +18,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <Folder Include="Persistence\Configurations\" />
     <Folder Include="Persistence\Repositories\" />
-    <Folder Include="Presence\" />
   </ItemGroup>
 
 </Project>
