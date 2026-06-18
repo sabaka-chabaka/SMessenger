@@ -9,4 +9,6 @@ public interface IChatMemberRepository
     Task CreateAsync(ChatMember member, CancellationToken ct = default);
     Task RemoveAsync(Guid chatId, Guid userId, CancellationToken ct = default);
     Task<bool> IsMemberAsync(Guid chatId, Guid userId, CancellationToken ct = default);
+    Task UpdateAsync(ChatMember member, CancellationToken ct = default);
+    Task<ILookup<Guid, ChatMember>> GetMembersByChatIdsAsync(IReadOnlyList<Guid> userIds, CancellationToken ct = default);
 }
