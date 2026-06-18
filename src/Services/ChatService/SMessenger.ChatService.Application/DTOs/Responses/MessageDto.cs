@@ -8,6 +8,5 @@ public record MessageDto(
     string Nonce,
     bool IsEdited,
     bool IsDeleted,
-    DateTime CreatedAt,
-    DateTime EditedAt
+    DateTime CreatedAt
 );

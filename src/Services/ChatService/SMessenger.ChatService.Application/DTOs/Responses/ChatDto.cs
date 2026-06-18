@@ -6,5 +6,6 @@ public record ChatDto(
     Guid Id,
     ChatType Type,
     string Name,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    ChatMemberDto[] Members
 );
