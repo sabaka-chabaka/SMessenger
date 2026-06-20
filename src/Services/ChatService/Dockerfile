@@ -1,4 +1,4 @@
-FROM ://microsoft.com AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
 WORKDIR /app
 
 COPY ["src/Services/ChatService/SMessenger.ChatService.API/SMessenger.ChatService.API.csproj", "src/Services/ChatService/SMessenger.ChatService.API/"]
@@ -13,7 +13,7 @@ WORKDIR /app/src/Services/ChatService/SMessenger.ChatService.API
 
 RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
 
-FROM ://microsoft.com AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
 WORKDIR /app
 EXPOSE 8080
 COPY --from=build /app/publish .

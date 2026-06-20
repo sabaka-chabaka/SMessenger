@@ -17,25 +17,28 @@ public class ChatService(
     IChatNotifier notifier
 ) : IChatService
 {
+    private const int DefaultChatPageSize = 20;
+    private const int DefaultMessagePageSize = 50;
+
     public async Task<CursorPage<ChatDto>> GetUserChatsAsync(
         Guid userId, string? cursor, CancellationToken ct = default)
     {
         var userChats = await chatRepo.GetUserChatsAsync(userId, ct);
 
-        var filtered = cursor is null
-            ? userChats.ToList()
-            : userChats.SkipWhile(c => c.Id.ToString() != cursor).Skip(1).ToList();
+        var ordered = userChats.ToList();
 
-        const int pageSize = 20;
-    
-        var pageWithPossibleNext = filtered.Take(pageSize + 1).ToList();
-    
-        var hasNextPage = pageWithPossibleNext.Count > pageSize;
-        var page = pageWithPossibleNext.Take(pageSize).ToList();
-    
+        var filtered = cursor is null
+            ? ordered
+            : ordered.SkipWhile(c => c.Id.ToString() != cursor).Skip(1).ToList();
+
+        var pageWithPossibleNext = filtered.Take(DefaultChatPageSize + 1).ToList();
+
+        var hasNextPage = pageWithPossibleNext.Count > DefaultChatPageSize;
+        var page = pageWithPossibleNext.Take(DefaultChatPageSize).ToList();
+
         var nextCursor = hasNextPage ? page.Last().Id.ToString() : null;
 
-        if (!page.Any())
+        if (page.Count == 0)
         {
             return new CursorPage<ChatDto>(Array.Empty<ChatDto>(), null);
         }
@@ -46,8 +49,8 @@ public class ChatService(
 
         var dtos = page.Select(c =>
         {
-            var members = allMembersGrouped.Contains(c.Id) 
-                ? allMembersGrouped[c.Id] 
+            var members = allMembersGrouped.Contains(c.Id)
+                ? allMembersGrouped[c.Id]
                 : Enumerable.Empty<ChatMember>();
 
             var memberDtos = members
@@ -60,7 +63,6 @@ public class ChatService(
         return new CursorPage<ChatDto>(dtos, nextCursor);
     }
 
-
     public async Task<ChatDto?> GetChatAsync(
         Guid chatId, Guid userId, CancellationToken ct = default)
     {
@@ -72,17 +74,43 @@ public class ChatService(
         var chatMembers = await memberRepo.GetMembersAsync(chatId, ct);
         var memberDtos = chatMembers
             .Select(m => new ChatMemberDto(m.UserId, m.Role, m.JoinedAt, m.LastReadAt.GetValueOrDefault()))
-            .ToList();
+            .ToArray();
 
-        return new ChatDto(chat.Id, chat.Type, chat.Name, chat.CreatedAt, memberDtos.ToArray());
+        return new ChatDto(chat.Id, chat.Type, chat.Name, chat.CreatedAt, memberDtos);
+    }
+
+    public async Task<CursorPage<MessageDto>> GetMessagesAsync(
+        Guid chatId, Guid userId, Guid? cursor, int limit = 50, CancellationToken ct = default)
+    {
+        await EnsureMemberAsync(chatId, userId, ct);
+
+        var pageSize = limit is > 0 and <= 200 ? limit : DefaultMessagePageSize;
+
+        var messages = await messageRepo.GetByChatIdAsync(chatId, cursor, pageSize + 1, ct);
+        var list = messages.ToList();
+
+        var hasNextPage = list.Count > pageSize;
+        var page = list.Take(pageSize).ToList();
+        var nextCursor = hasNextPage ? page.Last().Id.ToString() : null;
+
+        var dtos = page.Select(ToMessageDto).ToArray();
+
+        return new CursorPage<MessageDto>(dtos, nextCursor);
     }
 
     public async Task<ChatDto> CreateDirectChatAsync(
         CreateDirectChatRequest req, Guid callerId, CancellationToken ct = default)
     {
-        var existingChats = await chatRepo.GetUserChatsAsync(callerId, ct);
-        var existing = existingChats.FirstOrDefault(c => c.Type == ChatType.Direct);
-        // TODO: add GetDirectChatAsync(userId, otherUserId) в IChatRepository
+        var existing = await chatRepo.GetDirectChatBetweenAsync(callerId, req.OtherUserId, ct);
+        if (existing is not null)
+        {
+            var existingMembers = await memberRepo.GetMembersAsync(existing.Id, ct);
+            var existingMemberDtos = existingMembers
+                .Select(m => new ChatMemberDto(m.UserId, m.Role, m.JoinedAt, m.LastReadAt.GetValueOrDefault()))
+                .ToArray();
+
+            return new ChatDto(existing.Id, existing.Type, existing.Name, existing.CreatedAt, existingMemberDtos);
+        }
 
         var chat = Chat.Create(ChatType.Direct);
         await chatRepo.CreateAsync(chat, ct);
@@ -95,13 +123,13 @@ public class ChatService(
         await encryptedKeyRepo.UpsertAsync(chat.Id, callerId, req.MyEncryptedKeyBase64, ct);
         await encryptedKeyRepo.UpsertAsync(chat.Id, req.OtherUserId, req.OtherUserEncryptedKeyBase64, ct);
 
-        var memberDtos = new List<ChatMemberDto>
+        var memberDtos = new[]
         {
-            new(callerMember.UserId, callerMember.Role, callerMember.JoinedAt, callerMember.LastReadAt.GetValueOrDefault()),
-            new(otherMember.UserId, otherMember.Role, otherMember.JoinedAt, otherMember.LastReadAt.GetValueOrDefault())
+            new ChatMemberDto(callerMember.UserId, callerMember.Role, callerMember.JoinedAt, callerMember.LastReadAt.GetValueOrDefault()),
+            new ChatMemberDto(otherMember.UserId, otherMember.Role, otherMember.JoinedAt, otherMember.LastReadAt.GetValueOrDefault())
         };
 
-        var dto = new ChatDto(chat.Id, chat.Type, chat.Name, chat.CreatedAt, memberDtos.ToArray());
+        var dto = new ChatDto(chat.Id, chat.Type, chat.Name, chat.CreatedAt, memberDtos);
         await notifier.SendToUserAsync(req.OtherUserId, client => client.ChatCreated(dto), ct);
 
         return dto;
@@ -132,9 +160,9 @@ public class ChatService(
 
         var memberDtos = chatMembers
             .Select(m => new ChatMemberDto(m.UserId, m.Role, m.JoinedAt, m.LastReadAt.GetValueOrDefault()))
-            .ToList();
+            .ToArray();
 
-        var dto = new ChatDto(chat.Id, chat.Type, chat.Name, chat.CreatedAt, memberDtos.ToArray());
+        var dto = new ChatDto(chat.Id, chat.Type, chat.Name, chat.CreatedAt, memberDtos);
 
         foreach (var m in chatMembers.Where(m => m.UserId != callerId))
             await notifier.SendToUserAsync(m.UserId, client => client.ChatCreated(dto), ct);
@@ -160,7 +188,7 @@ public class ChatService(
         EditMessageRequest req, Guid userId, CancellationToken ct = default)
     {
         var message = await messageRepo.GetByIdAsync(req.MessageId, ct)
-            ?? throw new ChatNotFoundException(req.MessageId);
+            ?? throw new MessageNotFoundException(req.MessageId);
 
         if (message.SenderId != userId)
             throw new NotPermittedException("You can only edit your own messages");
@@ -178,16 +206,15 @@ public class ChatService(
         DeleteMessageRequest req, Guid userId, CancellationToken ct = default)
     {
         var message = await messageRepo.GetByIdAsync(req.MessageId, ct)
-            ?? throw new ChatNotFoundException(req.MessageId);
+            ?? throw new MessageNotFoundException(req.MessageId);
 
         if (message.SenderId != userId)
             throw new NotPermittedException("You can only delete your own messages");
 
-        message.SoftDelete();
         await messageRepo.SoftDeleteAsync(message, ct);
 
         await notifier.SendToGroupAsync(
-            message.ChatId, client => client.MessageDeleted(req.MessageId), ct);
+            message.ChatId, client => client.MessageDeleted(req.MessageId, message.ChatId), ct);
     }
 
     public async Task MarkAsReadAsync(
@@ -222,6 +249,9 @@ public class ChatService(
         Guid chatId, Guid targetUserId, Guid callerId, CancellationToken ct = default)
     {
         await EnsureRoleAsync(chatId, callerId, ct, MemberRole.Admin);
+
+        if (!await memberRepo.IsMemberAsync(chatId, targetUserId, ct))
+            throw new NotChatMemberException(chatId, targetUserId);
 
         await memberRepo.RemoveAsync(chatId, targetUserId, ct);
         await encryptedKeyRepo.DeleteByUserAsync(chatId, targetUserId, ct);
@@ -258,5 +288,5 @@ public class ChatService(
 
     private static MessageDto ToMessageDto(Message m)
         => new(m.Id, m.ChatId, m.SenderId, m.CiphertextBase64, m.Nonce,
-               m.IsEdited, m.IsDeleted, m.CreatedAt);
+               m.IsEdited, m.IsDeleted, m.CreatedAt, m.EditedAt);
 }

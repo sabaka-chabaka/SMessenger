@@ -1,10 +1,10 @@
 namespace SMessenger.ChatService.Application.DTOs.Requests;
 
 public record UploadEncryptedKeysRequest(
-    IEnumerable<ChatEncryptedKeyRequest> Keys
+    IEnumerable<ChatEncryptedKeyEntry> EncryptedKeys
 );
 
-public record ChatEncryptedKeyRequest(
-    Guid ChatId,
+public record ChatEncryptedKeyEntry(
+    Guid UserId,
     string EncryptedKeyBase64
 );

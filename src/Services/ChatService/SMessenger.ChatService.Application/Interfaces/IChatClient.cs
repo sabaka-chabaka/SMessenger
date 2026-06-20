@@ -6,7 +6,7 @@ public interface IChatClient
 {
     Task ReceiveMessage(MessageDto message);
     Task MessageEdited(MessageDto message);
-    Task MessageDeleted(Guid messageId);
+    Task MessageDeleted(Guid messageId, Guid chatId);
     Task UserTyping(Guid chatId, Guid userId);
     Task UserStoppedTyping(Guid chatId, Guid userId);
     Task MemberAdded(Guid chatId, ChatMemberDto member);

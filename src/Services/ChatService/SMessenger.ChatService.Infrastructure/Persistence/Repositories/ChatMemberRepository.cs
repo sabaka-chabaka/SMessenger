@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices.ComTypes;
 using Microsoft.EntityFrameworkCore;
 using SMessenger.ChatService.Domain.Entities;
 using SMessenger.ChatService.Domain.Interfaces;
@@ -27,7 +26,11 @@ public class ChatMemberRepository(AppDbContext db) : IChatMemberRepository
     {
         var member = await GetMemberAsync(chatId, userId, ct);
 
-        if (member != null) db.ChatMembers.Remove(member);
+        if (member != null)
+        {
+            db.ChatMembers.Remove(member);
+            await db.SaveChangesAsync(ct);
+        }
     }
 
     public async Task<bool> IsMemberAsync(Guid chatId, Guid userId, CancellationToken ct = default)
@@ -42,10 +45,10 @@ public class ChatMemberRepository(AppDbContext db) : IChatMemberRepository
     }
 
     public async Task<ILookup<Guid, ChatMember>> GetMembersByChatIdsAsync(
-        IReadOnlyList<Guid> chatIds, 
+        IReadOnlyList<Guid> chatIds,
         CancellationToken ct = default)
     {
-        if (!chatIds.Any())
+        if (chatIds.Count == 0)
         {
             return Enumerable.Empty<ChatMember>().ToLookup(x => Guid.Empty);
         }
@@ -56,5 +59,4 @@ public class ChatMemberRepository(AppDbContext db) : IChatMemberRepository
 
         return members.ToLookup(m => m.ChatId);
     }
-
 }

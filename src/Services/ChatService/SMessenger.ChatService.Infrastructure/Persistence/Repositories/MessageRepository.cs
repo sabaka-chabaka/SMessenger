@@ -11,9 +11,30 @@ public class MessageRepository(AppDbContext db) : IMessageRepository
         return await db.Messages.FirstOrDefaultAsync(x => x.Id == id, ct);
     }
 
-    public async Task<IReadOnlyList<Message>> GetByChatIdAsync(Guid chatId, Guid? cursor = null, int limit = 50, CancellationToken ct = default)
+    public async Task<IReadOnlyList<Message>> GetByChatIdAsync(
+        Guid chatId,
+        Guid? cursor = null,
+        int limit = 50,
+        CancellationToken ct = default)
     {
-        return await db.Messages.Where(x => x.ChatId == chatId).ToListAsync(ct);
+        var query = db.Messages
+            .Where(x => x.ChatId == chatId)
+            .OrderByDescending(x => x.CreatedAt)
+            .ThenByDescending(x => x.Id)
+            .AsQueryable();
+
+        if (cursor is not null)
+        {
+            var cursorMessage = await db.Messages.FirstOrDefaultAsync(x => x.Id == cursor, ct);
+            if (cursorMessage is not null)
+            {
+                query = query.Where(x =>
+                    x.CreatedAt < cursorMessage.CreatedAt ||
+                    (x.CreatedAt == cursorMessage.CreatedAt && x.Id < cursorMessage.Id));
+            }
+        }
+
+        return await query.Take(limit).ToListAsync(ct);
     }
 
     public async Task CreateAsync(Message message, CancellationToken ct = default)

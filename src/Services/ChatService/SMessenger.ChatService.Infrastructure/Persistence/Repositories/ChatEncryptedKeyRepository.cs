@@ -27,7 +27,8 @@ public class ChatEncryptedKeyRepository(AppDbContext db) : IChatEncryptedKeyRepo
             {
                 ChatId = chatId,
                 UserId = userId,
-                EncryptedKeyBase64 = encKey
+                EncryptedKeyBase64 = encKey,
+                CreatedAt = DateTime.UtcNow
             };
             await db.ChatEncryptedKeys.AddAsync(newKey, ct);
         }
