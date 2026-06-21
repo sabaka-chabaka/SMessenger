@@ -45,7 +45,7 @@ app.Run();
 Write-Host "Generating Alpine Dockerfile inside service folder..." -ForegroundColor Cyan
 $DockerfilePath = "$ServicePath/Dockerfile" 
 $DockerfileContent = @"
-FROM ://microsoft.com AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
 WORKDIR /app
 
 COPY ["src/Services/$ServiceName/SMessenger.$ServiceName.API/SMessenger.$ServiceName.API.csproj", "src/Services/$ServiceName/SMessenger.$ServiceName.API/"]
@@ -60,7 +60,7 @@ WORKDIR /app/src/Services/$ServiceName/SMessenger.$ServiceName.API
 
 RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
 
-FROM ://microsoft.com AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
 WORKDIR /app
 EXPOSE 8080
 COPY --from=build /app/publish .

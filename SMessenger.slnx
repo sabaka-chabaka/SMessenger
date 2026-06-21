@@ -16,6 +16,12 @@
     <Project Path="src/Services/ChatService/SMessenger.ChatService.Domain/SMessenger.ChatService.Domain.csproj" />
     <Project Path="src/Services/ChatService/SMessenger.ChatService.Infrastructure/SMessenger.ChatService.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/src/Services/UserService/">
+    <Project Path="src/Services/UserService/SMessenger.UserService.API/SMessenger.UserService.API.csproj" />
+    <Project Path="src/Services/UserService/SMessenger.UserService.Application/SMessenger.UserService.Application.csproj" />
+    <Project Path="src/Services/UserService/SMessenger.UserService.Domain/SMessenger.UserService.Domain.csproj" />
+    <Project Path="src/Services/UserService/SMessenger.UserService.Infrastructure/SMessenger.UserService.Infrastructure.csproj" />
+  </Folder>
   <Folder Name="/src/Shared/">
     <Project Path="src/Shared/SMessenger.Shared.Contracts/SMessenger.Shared.Contracts.csproj" />
   </Folder>
